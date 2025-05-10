@@ -55,11 +55,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'spiral_trajectory = multi_drone_slam.spiral_trajectory:main',
-            'feature_tracker = multi_drone_slam.feature_tracker:main',
-            'pose_visualizer = multi_drone_slam.pose_visualizer:main',
-            'my_code = multi_drone_slam.my_code:main',
-            'pitch_altitude = multi_drone_slam.pitch_altitude:main',
             'dron1 = multi_drone_slam.dron1:main',
             'dron2 = multi_drone_slam.dron2:main',
             'dron3 = multi_drone_slam.dron3:main'

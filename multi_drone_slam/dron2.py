@@ -12,14 +12,14 @@ class OffboardTakeoff(Node):
     def __init__(self):
         super().__init__('offboard_takeoff')
         # parameters
-        self.declare_parameter('takeoff_height', 2.0)
+        self.declare_parameter('takeoff_height', 5.0)
         self.takeoff_z = self.get_parameter('takeoff_height').value
         
         # trajectory parameters
         self.declare_parameter('center_x', 50.0)
         self.declare_parameter('center_y', 0.0)
-        self.declare_parameter('flight_radius', 10.0)
-        self.declare_parameter('total_height', 10.0)
+        self.declare_parameter('flight_radius', 23.0)
+        self.declare_parameter('total_height', 50.0)
         self.declare_parameter('num_sweeps', 6)
         self.declare_parameter('points_per_sweep', 50)
         self.declare_parameter('waypoint_threshold', 0.3)  # Distance threshold to consider waypoint reached
@@ -30,7 +30,7 @@ class OffboardTakeoff(Node):
         self.connected = False
         self.offboard_set = False
         self.armed = False
-        self.current_position = [5.0, 0.0, 0.0]
+        self.current_position = [0.0, 0.0, 0.0]
         self.spawn_position = None  # Initialize to None, will capture actual spawn position
         
         # trajectory
@@ -91,7 +91,9 @@ class OffboardTakeoff(Node):
             total_height, 
             num_sweeps, 
             points_per_sweep,
-            min_height=self.takeoff_z
+            min_height=self.takeoff_z,
+            flip_x=True,
+            flip_y=False
         )
         
         # Skip the first 20 points of the trajectory

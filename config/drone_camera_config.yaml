@@ -1,0 +1,40 @@
+%YAML:1.0
+
+# Camera Info
+Camera.name: "x500_gimbal"
+Camera.setup: "monocular"       # Valid values: monocular | stereo | RGBD
+Camera.type: "PinHole"        # Valid values: pin-hole | fisheye
+
+Camera.fx: 410.9392547607422
+Camera.fy: 410.93926906585693
+Camera.cx: 640.0
+Camera.cy: 360.0
+
+Camera.k1: 0.0
+Camera.k2: 0.0
+Camera.p1: 0.0
+Camera.p2: 0.0
+
+Camera.width: 1280
+Camera.height: 720
+Camera.fps: 30.0
+Camera.RGB: 1
+
+# ORB-SLAM3 Extractor Parameters
+ORBextractor.nFeatures: 1000
+ORBextractor.scaleFactor: 1.2
+ORBextractor.nLevels: 8
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+# Viewer Parameters (optional, avoids warnings)
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -100.0
+Viewer.ViewpointZ: -0.1
+Viewer.ViewpointF: 500.0

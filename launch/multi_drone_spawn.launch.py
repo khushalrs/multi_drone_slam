@@ -290,7 +290,7 @@ def generate_launch_description():
         ld.add_action(delayed_drone_group)
 
     return ld'''
-
+'''
 #!/usr/bin/env python3
 import os
 from launch import LaunchDescription
@@ -331,56 +331,136 @@ def generate_launch_description():
     ld.add_action(TimerAction(period=2.0, actions=[building]))
 
     # --- loop over each drone instance ---
-    for i in range(num_drones):
-        x_off = i * -3
+    # for i in range(num_drones):
+    #     x_off = i * -3
 
-        # 1) PX4 SITL
-        px4 = ExecuteProcess(
-            cmd=[px4_bin, '-i', str(i)],
-            additional_env={
-                'PX4_GZ_MODEL_POSE': f'{x_off},0,0.1,0,0,0',
-                'PX4_SIM_MODEL': 'gz_x500_gimbal',
-            },
-            cwd=px4_root,
-            output='screen',
-            name=f'px4_{i}'
-        )
+    #     # 1) PX4 SITL
+    #     px4 = ExecuteProcess(
+    #         cmd=[px4_bin, '-i', str(i)],
+    #         additional_env={
+    #             'PX4_GZ_MODEL_POSE': f'{x_off},0,0.1,0,0,0',
+    #             'PX4_SIM_MODEL': 'gz_x500_gimbal',
+    #         },
+    #         cwd=px4_root,
+    #         output='screen',
+    #         name=f'px4_{i}'
+    #     )
 
-        # 2) MAVROS (delayed so PX4 can finish booting)
-        mavros = TimerAction(
-            period=8.0,
-            actions=[
-                ExecuteProcess(
-                    cmd=[
-                        'ros2', 'run', 'mavros', 'mavros_node',
-                        '--ros-args',
-                        '-p', f'fcu_url:=udp://@127.0.0.1:{14580 + i}',
-                        '-r', f'__ns:=/drone{i}'
-                    ],
-                    output='screen',
-                    name=f'mavros_{i}'
-                )
-            ]
-        )
+    #     # # 2) MAVROS (delayed so PX4 can finish booting)
+    #     # mavros = TimerAction(
+    #     #     period=8.0,
+    #     #     actions=[
+    #     #         ExecuteProcess(
+    #     #             cmd=[
+    #     #                 'ros2', 'run', 'mavros', 'mavros_node',
+    #     #                 '--ros-args',
+    #     #                 '-p', f'fcu_url:=udp://@127.0.0.1:{14580 + i}',
+    #     #                 '-r', f'__ns:=/drone{i}'
+    #     #             ],
+    #     #             output='screen',
+    #     #             name=f'mavros_{i}'
+    #     #         )
+    #     #     ]
+    #     # )
 
-        # 3) gz‑ros2 bridge (with *corrected* remappings)
-        bridge = Node(
-            package='ros_gz_bridge',
-            executable='parameter_bridge',
-            arguments=[
-                f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/image@sensor_msgs/msg/Image@gz.msgs.Image',
-                f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo'
-            ],
-            remappings=[
-                (f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/image', f'/drone{i}/camera/image_raw'),
-                (f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/camera_info', f'/drone{i}/camera/camera_info')
-            ],
-            name=f'camera_bridge_{i}'
-        )
+    #     # 3) gz‑ros2 bridge (with *corrected* remappings)
+    #     bridge = Node(
+    #         package='ros_gz_bridge',
+    #         executable='parameter_bridge',
+    #         arguments=[
+    #             f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/image@sensor_msgs/msg/Image@gz.msgs.Image',
+    #             f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo'
+    #         ],
+    #         remappings=[
+    #             (f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/image', f'/drone{i}/camera/image_raw'),
+    #             (f'/world/default/model/x500_gimbal_{i}/link/camera_link/sensor/camera_info', f'/drone{i}/camera/camera_info')
+    #         ],
+    #         name=f'camera_bridge_{i}'
+    #     )
 
-        # group them and stagger startup
-        group = GroupAction([px4, bridge, mavros])
-        ld.add_action(TimerAction(period=12.0 * i, actions=[group]))
+    #     # group them and stagger startup
+    #     group = GroupAction([px4, bridge])
+    #     ld.add_action(TimerAction(period=12.0 * i, actions=[group]))
+
+    return ld'''
+
+#!/usr/bin/env python3
+import os
+from launch import LaunchDescription
+from launch.actions import ExecuteProcess, TimerAction, GroupAction, DeclareLaunchArgument
+from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
+
+def generate_launch_description():
+    # --- 1) point Gazebo at your local models folder ---
+    pkg_share = get_package_share_directory('multi_drone_slam')
+    gz_models = os.path.join(pkg_share, 'models')
+    os.environ['GZ_SIM_MODEL_PATH'] = gz_models
+    os.environ['GZ_SIM_RESOURCE_PATH'] = gz_models
+
+    # --- PX4 & MAVROS settings ---
+    px4_root = os.path.expanduser('~/drone/PX4-Autopilot')
+    px4_bin = os.path.join(px4_root, 'build/px4_sitl_default/bin/px4')
+
+    ld = LaunchDescription([
+        DeclareLaunchArgument('use_sim_time', default_value='True')
+    ])
+
+    # --- spawn the building, after a short delay ---
+    building = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=[
+            '-file', os.path.join(gz_models, 'terrain', 'skyscrapper', 'model.sdf'),
+            '-name', 'building',
+            '-x', '50', '-y', '0', '-z', '0',
+            '-R', '0',  '-P', '0', '-Y', '0',
+        ],
+        output='screen'
+    )
+    ld.add_action(TimerAction(period=2.0, actions=[building]))
+
+    # --- spawn single drone ---
+    # PX4 SITL
+    px4_1 = ExecuteProcess(
+        cmd=[px4_bin, '-i', '0'],
+        additional_env={
+            'PX4_GZ_MODEL_POSE': '0,0,0.07,0,0,0',
+            'PX4_SIM_MODEL': 'gz_x500_depth_mono',
+        },
+        cwd=px4_root,
+        output='screen',
+        name='px4_0'
+    )
+
+    px4_2 = ExecuteProcess(
+        cmd=[px4_bin, '-i', '1'],
+        additional_env={
+            'PX4_GZ_MODEL_POSE': '-3,0,0.1,0,0,0',
+            'PX4_SIM_MODEL': 'gz_x500_depth_mono',
+        },
+        cwd=px4_root,
+        output='screen',
+        name='px4_1'
+    )
+
+    ld.add_action(TimerAction(period=5.0, actions=[px4_1]))
+    # ld.add_action(TimerAction(period=18.0, actions=[px4_2]))
+
+    # Bridge for camera topics
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/world/default/model/x500_gimbal_0/link/camera_link/sensor/image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/world/default/model/x500_gimbal_0/link/camera_link/sensor/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'
+        ],
+        remappings=[
+            ('/world/default/model/x500_gimbal_0/link/camera_link/sensor/image', '/drone0/camera/image_raw'),
+            ('/world/default/model/x500_gimbal_0/link/camera_link/sensor/camera_info', '/drone0/camera/camera_info')
+        ],
+        name='camera_bridge_0'
+    )
 
     return ld
-

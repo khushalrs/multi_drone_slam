@@ -56,7 +56,10 @@ def compute_rpy_to_center(position, center):
 
     return roll, pitch, yaw
 
-def generate_vertical_zigzag_trajectory(center, flight_radius, total_height, num_sweeps, points_per_sweep, start_angle=0, min_height=2.0):
+def generate_vertical_zigzag_trajectory(center, 
+        flight_radius, total_height, num_sweeps, 
+        points_per_sweep, start_angle=0, min_height=5.0, 
+        flip_x=False, flip_y=False):
     """
     Generate a trajectory that progresses in a vertical zigzag along a semicircular path.
     
@@ -105,8 +108,14 @@ def generate_vertical_zigzag_trajectory(center, flight_radius, total_height, num
         sweep_points = np.column_stack((x_values, y_values, z_values))
         trajectory_points.append(sweep_points)
     
-    # Concatenate all sweep points to form the full trajectory
-    trajectory = np.concatenate(trajectory_points, axis=0)
+    # 3) Concatenate
+    trajectory = np.vstack(trajectory_points)
+    
+    # 4) Optional mirror
+    if flip_x:
+        trajectory[:,0] = 2*cx - trajectory[:,0]
+    if flip_y:
+        trajectory[:,1] = 2*cy - trajectory[:,1]
     return trajectory
 
 # Visualization: Plot the 3D trajectory using Matplotlib.
@@ -139,7 +148,10 @@ def plot_trajectory(trajectory):
     plt.tight_layout()
     plt.show()
 
-def get_trajectory_with_pose(center, flight_radius, total_height, num_sweeps, points_per_sweep, start_angle=0, min_height=2.0):
+def get_trajectory_with_pose(center, flight_radius, 
+        total_height, num_sweeps, points_per_sweep, 
+        start_angle=0, min_height=5.0, flip_x=False, 
+        flip_y=False):
     """
     Generate a trajectory with position and orientation information.
     
@@ -163,6 +175,8 @@ def get_trajectory_with_pose(center, flight_radius, total_height, num_sweeps, po
         num_sweeps, 
         points_per_sweep,
         start_angle,
+        flip_x=flip_x,
+        flip_y=flip_y
     )
     # print("Trajectory shape:", trajectory)
     
@@ -182,11 +196,11 @@ def get_trajectory_with_pose(center, flight_radius, total_height, num_sweeps, po
 # Example usage:
 if __name__ == '__main__':
     # Define trajectory parameters:
-    center = (0.0, 0.0)          # Center of the semicircular path (cylinder center)
-    flight_radius = 5.0          # Desired distance from the center
-    total_height = 10.0          # Total vertical distance to cover
+    center = (50.0, 0.0)          # Center of the semicircular path (cylinder center)
+    flight_radius = 23.0          # Desired distance from the center
+    total_height = 50.0          # Total vertical distance to cover
     num_sweeps = 6               # Number of zigzag passes (semicircular sweeps)
-    points_per_sweep = 50        # Resolution of each sweep
+    points_per_sweep = 100        # Resolution of each sweep
     
     # Generate the zigzag trajectory.
     trajectory = get_trajectory_with_pose(
@@ -195,8 +209,11 @@ if __name__ == '__main__':
         total_height, 
         num_sweeps, 
         points_per_sweep,
-        min_height=2.0
+        min_height=5.0,
+        flip_x=True,
+        flip_y=False
     )
+    # print("Trajectory shape:", trajectory[15:25])
     
     # # Print trajectory points and corresponding poses
     # print("\nTrajectory Points and Poses:")
