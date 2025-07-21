@@ -16,7 +16,8 @@ setup(
             glob('launch/*.launch.py')),
         ('share/' + package_name + '/config', [
             'config/terrain_mapping_params.yaml',
-            'config/drone_viz.rviz'
+            'config/drone_viz.rviz',
+            'config/bridge_config.yaml'
         ]),
         ('share/' + package_name + '/models/terrain', [
             'models/terrain/model.config',
@@ -28,6 +29,12 @@ setup(
         ]),
         ('share/' + package_name + '/models/terrain/skyscrapper/meshes', 
             glob('models/terrain/skyscrapper/meshes/*.*')),
+        ('share/' + package_name + '/models/terrain/cylinder/meshes', 
+            glob('models/terrain/cylinder/meshes/*.*')),
+        ('share/' + package_name + '/models/terrain/cylinder', [
+            'models/terrain/cylinder/model.config',
+            'models/terrain/cylinder/model.sdf'
+        ]),
         ('share/' + package_name + '/models/terrain/skyscrapper/meshes/interior', 
             glob('models/terrain/skyscrapper/meshes/interior/*.*')),
         ('share/' + package_name + '/models/terrain/meshes', [

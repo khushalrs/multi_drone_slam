@@ -411,8 +411,8 @@ def generate_launch_description():
         package='ros_gz_sim',
         executable='create',
         arguments=[
-            '-file', os.path.join(gz_models, 'terrain', 'skyscrapper', 'model.sdf'),
-            '-name', 'building',
+            '-file', os.path.join(gz_models, 'terrain', 'cylinder', 'model.sdf'),
+            '-name', 'cylinder',
             '-x', '50', '-y', '0', '-z', '0',
             '-R', '0',  '-P', '0', '-Y', '0',
         ],
@@ -445,7 +445,7 @@ def generate_launch_description():
     )
 
     ld.add_action(TimerAction(period=5.0, actions=[px4_1]))
-    # ld.add_action(TimerAction(period=18.0, actions=[px4_2]))
+    ld.add_action(TimerAction(period=18.0, actions=[px4_2]))
 
     # Bridge for camera topics
     bridge = Node(
