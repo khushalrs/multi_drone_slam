@@ -1,0 +1,18 @@
+# In config/mavros_config.yaml
+# Corrected ROS 2 Parameter File Format
+
+/**:
+  ros__parameters:
+    plugin_whitelist:
+      - "sys_status"
+      - "command"
+      - "param"
+      - "imu"
+      - "local_position"
+      - "setpoint_position"
+      - "setpoint_raw"
+      - "timesync"
+
+    local_position:
+      tf:
+        send: false

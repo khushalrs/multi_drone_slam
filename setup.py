@@ -17,7 +17,8 @@ setup(
         ('share/' + package_name + '/config', [
             'config/terrain_mapping_params.yaml',
             'config/drone_viz.rviz',
-            'config/bridge_config.yaml'
+            'config/bridge_config.yaml',
+            'config/mavros_config.yaml'
         ]),
         ('share/' + package_name + '/models/terrain', [
             'models/terrain/model.config',
@@ -64,7 +65,8 @@ setup(
         'console_scripts': [
             'dron1 = multi_drone_slam.dron1:main',
             'dron2 = multi_drone_slam.dron2:main',
-            'dron3 = multi_drone_slam.dron3:main'
+            'dron3 = multi_drone_slam.dron3:main',
+            'gz_link_pose_to_tf = multi_drone_slam.gz_link_pose_to_tf:main'
         ],
     },
     python_requires='>=3.8'
