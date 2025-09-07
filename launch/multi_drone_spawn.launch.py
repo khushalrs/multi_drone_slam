@@ -42,6 +42,7 @@ def generate_launch_description():
         ExecuteProcess(
             cmd=[px4_bin, '-i', '0'],
             additional_env={
+                'MAV_SYS_ID': '1',
                 'PX4_GZ_MODEL_POSE': '0,0,0.07,0,0,0',
                 'PX4_SIM_MODEL': 'gz_x500_depth_mono',
             },
@@ -56,6 +57,7 @@ def generate_launch_description():
         ExecuteProcess(
             cmd=[px4_bin, '-i', '1'],
             additional_env={
+                'MAV_SYS_ID': '2',
                 'PX4_GZ_MODEL_POSE': '-3,0,0.1,0,0,0',
                 'PX4_SIM_MODEL': 'gz_x500_depth_mono',
             },

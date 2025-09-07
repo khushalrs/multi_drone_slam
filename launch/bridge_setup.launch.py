@@ -15,27 +15,27 @@
 #         output='screen'
 #     )
 
-#     mavros1 = Node(
-#         package='mavros',
-#         executable='mavros_node',
-#         output='screen',
-#         arguments=[
-#             '--ros-args',
-#             '-p', 'fcu_url:=udp://@127.0.0.1:14580',
-#             '-r', '__ns:=/drone1'
-#         ]
-#     )
+    # mavros1 = Node(
+    #     package='mavros',
+    #     executable='mavros_node',
+    #     output='screen',
+    #     arguments=[
+    #         '--ros-args',
+    #         '-p', 'fcu_url:=udp://@127.0.0.1:14580',
+    #         '-r', '__ns:=/drone1'
+    #     ]
+    # )
 
-#     mavros2 = Node(
-#         package='mavros',
-#         executable='mavros_node',
-#         output='screen',
-#         arguments=[
-#             '--ros-args',
-#             '-p', 'fcu_url:=udp://@127.0.0.1:14581',
-#             '-r', '__ns:=/drone2'
-#         ]
-#     )
+    # mavros2 = Node(
+    #     package='mavros',
+    #     executable='mavros_node',
+    #     output='screen',
+    #     arguments=[
+    #         '--ros-args',
+    #         '-p', 'fcu_url:=udp://@127.0.0.1:14581',
+    #         '-r', '__ns:=/drone2'
+    #     ]
+    # )
 
 #     # static world->map (identity)
 #     world_to_map = Node(
@@ -98,18 +98,44 @@ def generate_launch_description():
         output='screen'
     )
 
-    # --- DRONE 1 SETUP ---
-    drone1_ns = 'drone1'
     mavros1 = Node(
         package='mavros',
         executable='mavros_node',
-        namespace=drone1_ns,
         output='screen',
-        parameters=[
-            mavros_config_path,
-            {'fcu_url': 'udp://:14540@127.0.0.1:14580'}
+        arguments=[
+            '--ros-args',
+            '-p', 'fcu_url:=udp://:14540@127.0.0.1:14580',
+            '-p', 'tgt_system:=1',
+            '-p', 'fcu_protocol:=v2.0',
+            '-r', '__ns:=/drone1'
         ]
     )
+
+    mavros2 = Node(
+        package='mavros',
+        executable='mavros_node',
+        output='screen',
+        arguments=[
+            '--ros-args',
+            '-p', 'fcu_url:=udp://:14541@127.0.0.1:14581',
+            '-p', 'tgt_system:=2',
+            '-p', 'fcu_protocol:=v2.0',
+            '-r', '__ns:=/drone2'
+        ]
+    )
+
+    # --- DRONE 1 SETUP ---
+    drone1_ns = 'drone1'
+    # mavros1 = Node(
+    #     package='mavros',
+    #     executable='mavros_node',
+    #     namespace=drone1_ns,
+    #     output='screen',
+    #     parameters=[
+    #         mavros_config_path,
+    #         {'fcu_url': 'udp://@127.0.0.1:14580'}
+    #     ]
+    # )
 
     static_tf_publisher1 = Node(
         package='tf2_ros',
@@ -160,16 +186,16 @@ def generate_launch_description():
 
     # --- DRONE 2 SETUP ---
     drone2_ns = 'drone2'
-    mavros2 = Node(
-        package='mavros',
-        executable='mavros_node',
-        namespace=drone2_ns,
-        output='screen',
-        parameters=[
-            mavros_config_path,
-            {'fcu_url': 'udp://:14540@127.0.0.1:14581'}
-        ]
-    )
+    # mavros2 = Node(
+    #     package='mavros',
+    #     executable='mavros_node',
+    #     namespace=drone2_ns,
+    #     output='screen',
+    #     parameters=[
+    #         mavros_config_path,
+    #         {'fcu_url': 'udp://@127.0.0.1:14581'}
+    #     ]
+    # )
 
     static_tf_publisher2 = Node(
         package='tf2_ros',

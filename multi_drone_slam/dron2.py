@@ -4,7 +4,6 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from mavros_msgs.msg import State
 from mavros_msgs.srv import SetMode, CommandBool
-from std_srvs.srv import SetBool
 import numpy as np
 from .trajectory_generator import get_trajectory_with_pose
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
@@ -13,19 +12,19 @@ class OffboardTakeoff(Node):
     def __init__(self):
         super().__init__('offboard_takeoff')
         # parameters
-        self.declare_parameter('takeoff_height', 5.0)
+        self.declare_parameter('takeoff_height', 2.0)
         self.takeoff_z = self.get_parameter('takeoff_height').value
         
         # trajectory parameters
         self.declare_parameter('center_x', 50.0)
         self.declare_parameter('center_y', 0.0)
-        self.declare_parameter('flight_radius', 23.0)
+        self.declare_parameter('flight_radius', 30.0)
         self.declare_parameter('total_height', 50.0)
-        self.declare_parameter('num_sweeps', 6)
-        self.declare_parameter('points_per_sweep', 100)
+        self.declare_parameter('num_sweeps', 8)
+        self.declare_parameter('points_per_sweep', 50)
         self.declare_parameter('waypoint_threshold', 0.3)  # Distance threshold to consider waypoint reached
         self.declare_parameter('transition_step_size', 0.1)  # Maximum step size during transition
-
+        
         # state
         self.current_state = State()
         self.connected = False
@@ -33,18 +32,14 @@ class OffboardTakeoff(Node):
         self.armed = False
         self.current_position = [0.0, 0.0, 0.0]
         self.spawn_position = None  # Initialize to None, will capture actual spawn position
-        self.is_paused = False  # Flag to track if the drone is paused
-        self.pause_position = None  # Position to hold when paused
         
-
         # trajectory
         self.trajectory = None  # Will generate after capturing spawn position
         self.current_waypoint_idx = 0
         self.STATE_INIT = 0
         self.STATE_TAKEOFF = 1
         self.STATE_FOLLOW_TRAJECTORY = 2  # Removed TRANSITION state
-        self.STATE_PAUSED = 3  # New state for paused operation
-        self.STATE_COMPLETED = 4  # Changed from 3 to 4
+        self.STATE_COMPLETED = 3
         self.flight_state = self.STATE_INIT
         # Remove transition_progress variable as it's no longer needed
 
@@ -75,44 +70,10 @@ class OffboardTakeoff(Node):
         self.get_logger().info('Waiting for /drone1/cmd/arming service...')
         self.arm_client.wait_for_service()
 
-        self.pause_service = self.create_service(
-            SetBool, 
-            '/drone1/pause_resume', 
-            self.pause_resume_callback
-        )
-
         # timer to publish setpoints
         self.timer = self.create_timer(0.05, self.timer_cb)
         self.tick = 0
         self.log_counter = 0  # Counter to limit logging frequency
-
-    def pause_resume_callback(self, request, response):
-        """Handle pause/resume service calls"""
-        if request.data:  # True = pause
-            if not self.is_paused:
-                self.is_paused = True
-                self.pause_position = self.current_position.copy()
-                self.previous_state = self.flight_state
-                self.flight_state = self.STATE_PAUSED
-                self.get_logger().info('Drone paused at current position')
-                response.success = True
-                response.message = "Drone paused"
-            else:
-                response.success = False
-                response.message = "Drone already paused"
-        else:  # False = resume
-            if self.is_paused:
-                self.is_paused = False
-                self.flight_state = self.previous_state
-                self.get_logger().info('Resuming drone operation')
-                response.success = True
-                response.message = "Drone resumed"
-            else:
-                response.success = False
-                response.message = "Drone not paused"
-        
-        return response
-     
 
     def generate_trajectory(self):
         """Generate trajectory based on parameters"""
@@ -137,14 +98,7 @@ class OffboardTakeoff(Node):
         
         # Skip the first 20 points of the trajectory
         self.get_logger().info(f'Removing first 20 points from trajectory. Original size: {len(trajectory)}, new size: {len(trajectory[20:])}')
-        new_trajectory = trajectory[20:]
-        start = np.array([0, 0, self.takeoff_z, 0, 0, 0])
-        end = np.array([new_trajectory[0][0], new_trajectory[0][1], self.takeoff_z, 0, 0, 0])
-        # Generate 50 points between start and end (excluding start/end)
-        points = np.linspace(start, end, num=50 + 2)[1:-1]
-        new_trajectory = np.insert(new_trajectory, 0, points, axis=0)
-        print(f"New trajectory shape: {new_trajectory}")
-        return new_trajectory
+        return trajectory[20:]
         
     def state_cb(self, msg):
         self.current_state = msg
@@ -198,21 +152,6 @@ class OffboardTakeoff(Node):
             self.get_logger().info(f"Stored spawn position: x={self.spawn_position[0]:.2f}, y={self.spawn_position[1]:.2f}, z={self.spawn_position[2]:.2f}")
             # Generate trajectory now that we know spawn position
             self.trajectory = self.generate_trajectory()
-
-        if self.flight_state == self.STATE_PAUSED and self.pause_position:
-            # When paused, hold position where it was paused
-            sp.pose.position.x = self.pause_position[0]
-            sp.pose.position.y = self.pause_position[1]
-            sp.pose.position.z = self.pause_position[2]
-            sp.pose.orientation.w = 1.0
-            
-            # Log setpoint (only every 20 ticks)
-            if self.tick % 20 == 0:
-                self.get_logger().info(f"SENDING SETPOINT (PAUSED): x={self.pause_position[0]:.2f}, y={self.pause_position[1]:.2f}, z={self.pause_position[2]:.2f}")
-                
-            self.setpoint_pub.publish(sp)
-            self.tick += 1
-            return  # Skip the rest of the function while paused
         
         # Check if takeoff height has been reached
         if self.flight_state == self.STATE_TAKEOFF and self.spawn_position:
