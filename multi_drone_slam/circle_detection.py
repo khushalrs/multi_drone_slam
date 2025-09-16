@@ -20,13 +20,17 @@ class RedCircleDetector(Node):
         self.marker_id = 0
         self.fx = self.fy = self.cx = self.cy = None
 
-        # Topics
-        self.rgb_sub = self.create_subscription(Image, '/drone1/rgb_camera/image_raw', self.rgb_cb, 10)
-        self.depth_sub = self.create_subscription(Image, '/drone1/depth_camera/image_raw', self.depth_cb, 10)
-        self.cam_info_sub = self.create_subscription(CameraInfo, '/drone1/rgb_camera/camera_info', self.cam_info_cb, 10)
+        # Parameters
+        self.declare_parameter('map_frame', 'map')
+        self.map_frame = self.get_parameter('map_frame').value
 
-        # Marker publisher
-        self.marker_pub = self.create_publisher(Marker, '/drone1/red_circle_markers', 10)
+        # Topics (relative; resolve with node namespace like /drone1 or /drone2)
+        self.rgb_sub = self.create_subscription(Image, 'rgb_camera/image_raw', self.rgb_cb, 10)
+        self.depth_sub = self.create_subscription(Image, 'depth_camera/image_raw', self.depth_cb, 10)
+        self.cam_info_sub = self.create_subscription(CameraInfo, 'rgb_camera/camera_info', self.cam_info_cb, 10)
+
+        # Marker publisher (relative topic, per-drone namespace)
+        self.marker_pub = self.create_publisher(Marker, 'red_circle_markers', 10)
 
         # TF listener
         self.tf_buffer = tf2_ros.Buffer()
@@ -85,14 +89,15 @@ class RedCircleDetector(Node):
                 Z = depth
 
                 cam_point = PointStamped()
-                cam_point.header.frame_id = 'drone1/camera_link'
+                # Use the incoming image's frame to avoid hard-coding drone-specific frames
+                cam_point.header.frame_id = self.latest_depth.header.frame_id or self.latest_rgb.header.frame_id
                 cam_point.header.stamp = self.latest_depth.header.stamp
                 cam_point.point.x = X
                 cam_point.point.y = Y
                 cam_point.point.z = Z
 
                 try:
-                    tf = self.tf_buffer.lookup_transform('map', cam_point.header.frame_id, rclpy.time.Time())
+                    tf = self.tf_buffer.lookup_transform(self.map_frame, cam_point.header.frame_id, rclpy.time.Time())
                     map_point = tf2_geometry_msgs.do_transform_point(cam_point, tf)
                     self.publish_marker(map_point)
                 except Exception as e:
@@ -100,7 +105,7 @@ class RedCircleDetector(Node):
 
     def publish_marker(self, point):
         marker = Marker()
-        marker.header.frame_id = "map"
+        marker.header.frame_id = self.map_frame
         marker.header.stamp = self.get_clock().now().to_msg()
         marker.ns = "red_circles"
         marker.id = self.marker_id

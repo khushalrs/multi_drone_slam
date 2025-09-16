@@ -66,7 +66,8 @@ setup(
             'dron1 = multi_drone_slam.dron1:main',
             'dron2 = multi_drone_slam.dron2:main',
             'dron3 = multi_drone_slam.dron3:main',
-            'gz_link_pose_to_tf = multi_drone_slam.gz_link_pose_to_tf:main'
+            'gz_link_pose_to_tf = multi_drone_slam.gz_link_pose_to_tf:main',
+            'circle_detection = multi_drone_slam.circle_detection:main'
         ],
     },
     python_requires='>=3.8'

@@ -1,79 +1,7 @@
-# from launch import LaunchDescription
-# from launch_ros.actions import Node
-# from launch.actions import TimerAction
-
-# def generate_launch_description():
-#     bridge = Node(
-#         package='ros_gz_bridge',
-#         executable='parameter_bridge',
-#         name='gz_ros_bridge',
-#         parameters=[{
-#             'config_file': '/home/frazergene/drone/drone_ws/install/'
-#                             'multi_drone_slam/share/multi_drone_slam/'
-#                             'config/bridge_config.yaml'
-#         }],
-#         output='screen'
-#     )
-
-    # mavros1 = Node(
-    #     package='mavros',
-    #     executable='mavros_node',
-    #     output='screen',
-    #     arguments=[
-    #         '--ros-args',
-    #         '-p', 'fcu_url:=udp://@127.0.0.1:14580',
-    #         '-r', '__ns:=/drone1'
-    #     ]
-    # )
-
-    # mavros2 = Node(
-    #     package='mavros',
-    #     executable='mavros_node',
-    #     output='screen',
-    #     arguments=[
-    #         '--ros-args',
-    #         '-p', 'fcu_url:=udp://@127.0.0.1:14581',
-    #         '-r', '__ns:=/drone2'
-    #     ]
-    # )
-
-#     # static world->map (identity)
-#     world_to_map = Node(
-#         package='tf2_ros', executable='static_transform_publisher',
-#         arguments=['0','0','0','0','0','0','world','map'],
-#         output='screen'
-#     )
-
-#     tf_d1 = Node(
-#         package='multi_drone_slam',
-#         executable='gz_link_pose_to_tf',
-#         name='tf_drone1',
-#         arguments=['drone1/base_link', '/drone1/gz/base_link_pose', 'map'],
-#         output='screen'
-#     )
-
-#     tf_d2 = Node(
-#         package='multi_drone_slam',
-#         executable='gz_link_pose_to_tf',
-#         name='tf_drone2',
-#         arguments=['drone2/base_link', '/drone2/gz/base_link_pose', 'map'],
-#         output='screen'
-#     )
-
-#     return LaunchDescription([
-#         bridge,
-#         TimerAction(period=1.0, actions=[tf_d1]),
-#         TimerAction(period=1.5, actions=[tf_d2]),
-#         TimerAction(period=2.0, actions=[world_to_map]),
-#         TimerAction(period=3.0, actions=[mavros1]),
-#         TimerAction(period=5.0, actions=[mavros2])
-#     ])
-
-
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch_ros.actions import Node
+from launch_ros.actions import Node 
 
 def generate_launch_description():
     """
@@ -82,8 +10,7 @@ def generate_launch_description():
     This launch file starts the necessary components for two drones, including:
     - A Gazebo to ROS bridge for sensor data.
     - MAVROS for communication with the PX4 autopilot.
-    - A static transform publisher for the camera's physical location on the drone.
-    - RTAB-Map for simultaneous localization and mapping.
+    - TF publishers for odom and static transforms.
     """
     pkg_share = get_package_share_directory('multi_drone_slam')
     bridge_config_path = os.path.join(pkg_share, 'config', 'bridge_config.yaml')
@@ -108,7 +35,8 @@ def generate_launch_description():
             '-p', 'tgt_system:=1',
             '-p', 'fcu_protocol:=v2.0',
             '-r', '__ns:=/drone1'
-        ]
+        ],
+        parameters=[{'use_sim_time': True}]
     )
 
     mavros2 = Node(
@@ -121,26 +49,38 @@ def generate_launch_description():
             '-p', 'tgt_system:=2',
             '-p', 'fcu_protocol:=v2.0',
             '-r', '__ns:=/drone2'
-        ]
+        ],
+        parameters=[{'use_sim_time': True}]
+    )
+
+    # --- Static transforms to connect each drone's map to a global 'map' frame ---
+    # This allows visualizing both drones in RViz under a common frame.
+    # RTAB-Map will publish the transform from its map_frame (e.g., 'drone1/map')
+    # to its odom_frame (e.g., 'drone1/odom').
+
+    # Drone 1 spawns at (0, 0, ...), so its map frame is aligned with the global map frame.
+    static_map_to_drone1_map = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='map_to_drone1_map_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'drone1/map']
+    )
+
+    # Drone 2 spawns at (-3, 0, ...), so its map frame is offset from the global map frame.
+    static_map_to_drone2_map = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='map_to_drone2_map_publisher',
+        arguments=['-3', '0', '0', '0', '0', '0', 'map', 'drone2/map']
     )
 
     # --- DRONE 1 SETUP ---
     drone1_ns = 'drone1'
-    # mavros1 = Node(
-    #     package='mavros',
-    #     executable='mavros_node',
-    #     namespace=drone1_ns,
-    #     output='screen',
-    #     parameters=[
-    #         mavros_config_path,
-    #         {'fcu_url': 'udp://@127.0.0.1:14580'}
-    #     ]
-    # )
 
     static_tf_publisher1 = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='base_to_camera_broadcaster',
+        name='drone1_base_to_camera_broadcaster',
         namespace=drone1_ns,
         arguments=[
             '0.12', '0.03', '0.242', '0', '0', '0',
@@ -148,59 +88,46 @@ def generate_launch_description():
             f'{drone1_ns}/camera_link'
         ]
     )
-    
-    # This node will subscribe to MAVROS odometry and publish the odom->base_link transform
-    # This is a crucial link that RTAB-Map needs.
-    odom_tf_publisher1 = Node(
+
+    d1_cam_to_rgb = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='odom_to_base_link_publisher',
-        namespace=drone1_ns,
-        # NOTE: This should be a dynamic transform publisher that reads from odometry.
-        # For initial testing, a static one at the origin is okay.
-        arguments=['0', '0', '0', '0', '0', '0', f'{drone1_ns}/odom', f'{drone1_ns}/base_link']
+        name='drone1_camera_to_imx214',
+        arguments=['0', '0', '0', '0', '0', '0',
+                   f'{drone1_ns}/camera_link',
+                   'x500_depth_mono_0/camera_link/IMX214']
     )
 
-    # rtabmap1 = Node(
-    #     package='rtabmap_ros',
-    #     executable='rtabmap',
-    #     name='rtabmap',
-    #     namespace=drone1_ns,
-    #     output='screen',
-    #     parameters=[{
-    #         'frame_id': f'{drone1_ns}/base_link',
-    #         'odom_frame_id': f'{drone1_ns}/odom',
-    #         'map_frame_id': f'{drone1_ns}/map',
-    #         'subscribe_depth': True,
-    #         'subscribe_rgb': True,
-    #         'subscribe_odom': True,
-    #         'queue_size': 100,
-    #     }],
-    #     remappings=[
-    #         ('rgb/image', 'rgb_camera'),
-    #         ('depth/image', 'depth_camera'),
-    #         ('rgb/camera_info', 'camera_info'),
-    #         ('odom', 'mavros/local_position/odom')
-    #     ]
-    # )
+    d1_cam_to_stereo = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='drone1_camera_to_stereo',
+        arguments=['0', '0', '0', '0', '0', '0',
+                   f'{drone1_ns}/camera_link',
+                   'x500_depth_mono_0/camera_link/StereoOV7251']
+    )
+
+    odom_tf_publisher1 = Node(
+        package='multi_drone_slam',
+        executable='gz_link_pose_to_tf',
+        name='drone1_gz_link_pose_to_tf',
+        namespace=drone1_ns,
+        output='screen',
+        parameters=[{
+            'use_sim_time': True,
+            'odom_topic': f'/{drone1_ns}/local_position/odom',
+            'parent_frame': f'{drone1_ns}/odom',
+            'child_frame':  f'{drone1_ns}/base_link',
+        }]
+    )
 
     # --- DRONE 2 SETUP ---
     drone2_ns = 'drone2'
-    # mavros2 = Node(
-    #     package='mavros',
-    #     executable='mavros_node',
-    #     namespace=drone2_ns,
-    #     output='screen',
-    #     parameters=[
-    #         mavros_config_path,
-    #         {'fcu_url': 'udp://@127.0.0.1:14581'}
-    #     ]
-    # )
 
     static_tf_publisher2 = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='base_to_camera_broadcaster',
+        name='drone2_base_to_camera_broadcaster',
         namespace=drone2_ns,
         arguments=[
             '0.12', '0.03', '0.242', '0', '0', '0',
@@ -209,41 +136,41 @@ def generate_launch_description():
         ]
     )
 
-    odom_tf_publisher2 = Node(
+    d2_cam_to_rgb = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='odom_to_base_link_publisher',
-        namespace=drone2_ns,
-        arguments=['0', '0', '0', '0', '0', '0', f'{drone2_ns}/odom', f'{drone2_ns}/base_link']
+        name='drone2_camera_to_imx214',
+        arguments=['0', '0', '0', '0', '0', '0',
+                   f'{drone2_ns}/camera_link',
+                   'x500_depth_mono_1/camera_link/IMX214']
     )
 
-    # rtabmap2 = Node(
-    #     package='rtabmap_ros',
-    #     executable='rtabmap',
-    #     name='rtabmap',
-    #     namespace=drone2_ns,
-    #     output='screen',
-    #     parameters=[{
-    #         'frame_id': f'{drone2_ns}/base_link',
-    #         'odom_frame_id': f'{drone2_ns}/odom',
-    #         'map_frame_id': f'{drone2_ns}/map',
-    #         'subscribe_depth': True,
-    #         'subscribe_rgb': True,
-    #         'subscribe_odom': True,
-    #         'queue_size': 100,
-    #     }],
-    #     remappings=[
-    #         ('rgb/image', 'rgb_camera'),
-    #         ('depth/image', 'depth_camera'),
-    #         ('rgb/camera_info', 'camera_info'),
-    #         ('odom', 'mavros/local_position/odom')
-    #     ]
-    # )
+    d2_cam_to_stereo = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='drone2_camera_to_stereo',
+        arguments=['0', '0', '0', '0', '0', '0',
+                   f'{drone2_ns}/camera_link',
+                   'x500_depth_mono_1/camera_link/StereoOV7251']
+    )
+
+    odom_tf_publisher2 = Node(
+        package='multi_drone_slam',
+        executable='gz_link_pose_to_tf',
+        name='drone2_gz_link_pose_to_tf',
+        namespace=drone2_ns,
+        output='screen',
+        parameters=[{
+            'use_sim_time': True,
+            'odom_topic': f'/{drone2_ns}/local_position/odom',
+            'parent_frame': f'{drone2_ns}/odom',
+            'child_frame':  f'{drone2_ns}/base_link'
+        }]
+    )
 
     return LaunchDescription([
         gz_ros_bridge,
-        mavros1, static_tf_publisher1, odom_tf_publisher1, 
-        # rtabmap1,
-        mavros2, static_tf_publisher2, odom_tf_publisher2, # rtabmap2
+        static_map_to_drone1_map, static_map_to_drone2_map,
+        mavros1, static_tf_publisher1, d1_cam_to_rgb, d1_cam_to_stereo, odom_tf_publisher1,
+        mavros2, static_tf_publisher2, d2_cam_to_rgb, d2_cam_to_stereo, odom_tf_publisher2
     ])
-

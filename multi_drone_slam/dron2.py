@@ -93,7 +93,7 @@ class OffboardTakeoff(Node):
             points_per_sweep,
             min_height=self.takeoff_z,
             flip_x=True,
-            flip_y=True
+            flip_y=False
         )
         
         # Skip the first 20 points of the trajectory

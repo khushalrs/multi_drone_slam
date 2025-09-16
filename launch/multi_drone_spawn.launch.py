@@ -70,20 +70,4 @@ def generate_launch_description():
     ld.add_action(TimerAction(period=5.0, actions=[px4_1]))
     ld.add_action(TimerAction(period=18.0, actions=[px4_2]))
 
-    # Bridge for camera topics
-    bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/world/default/model/x500_gimbal_0/link/camera_link/sensor/image@sensor_msgs/msg/Image@gz.msgs.Image',
-            '/world/default/model/x500_gimbal_0/link/camera_link/sensor/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'
-        ],
-        remappings=[
-            ('/world/default/model/x500_gimbal_0/link/camera_link/sensor/image', '/drone0/camera/image_raw'),
-            ('/world/default/model/x500_gimbal_0/link/camera_link/sensor/camera_info', '/drone0/camera/camera_info')
-        ],
-        name='camera_bridge_0'
-    )
-
     return ld

@@ -1,38 +1,38 @@
 # bridge_config.yaml
 
 # Drone 1 bridges
-- gz_topic_name: "/world/default/model/x500_depth_mono_0/link/OakD-Lite-Modify/base_link/sensor/IMX214/image"
+- gz_topic_name: "/world/default/model/x500_depth_mono_0/link/camera_link/sensor/IMX214/image"
   ros_topic_name: "/drone1/rgb_camera"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   frame_id: "drone1/camera_link"
 
-- gz_topic_name: "/world/default/model/x500_depth_mono_0/link/OakD-Lite-Modify/base_link/sensor/IMX214/camera_info"
+- gz_topic_name: "/world/default/model/x500_depth_mono_0/link/camera_link/sensor/IMX214/camera_info"
   ros_topic_name: "/drone1/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   frame_id: "drone1/camera_link"
 
-- gz_topic_name: "/world/default/model/x500_depth_mono_0/link/OakD-Lite-Modify/base_link/sensor/StereoOV7251/depth_image"
+- gz_topic_name: "/world/default/model/x500_depth_mono_0/link/camera_link/sensor/StereoOV7251/depth_image"
   ros_topic_name: "/drone1/depth_camera"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   frame_id: "drone1/camera_link"
 
 # Drone 2 bridges
-- gz_topic_name: "/world/default/model/x500_depth_mono_1/link/OakD-Lite-Modify/base_link/sensor/IMX214/image"
+- gz_topic_name: "/world/default/model/x500_depth_mono_1/link/camera_link/sensor/IMX214/image"
   ros_topic_name: "/drone2/rgb_camera"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   frame_id: "drone2/camera_link"
 
-- gz_topic_name: "/world/default/model/x500_depth_mono_1/link/OakD-Lite-Modify/base_link/sensor/IMX214/camera_info"
+- gz_topic_name: "/world/default/model/x500_depth_mono_1/link/camera_link/sensor/IMX214/camera_info"
   ros_topic_name: "/drone2/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   frame_id: "drone2/camera_link"
 
-- gz_topic_name: "/world/default/model/x500_depth_mono_1/link/OakD-Lite-Modify/base_link/sensor/StereoOV7251/depth_image"
+- gz_topic_name: "/world/default/model/x500_depth_mono_1/link/camera_link/sensor/StereoOV7251/depth_image"
   ros_topic_name: "/drone2/depth_camera"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
