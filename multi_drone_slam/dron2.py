@@ -20,7 +20,7 @@ class OffboardTakeoff(Node):
         self.declare_parameter('center_y', 0.0)
         self.declare_parameter('flight_radius', 30.0)
         self.declare_parameter('total_height', 50.0)
-        self.declare_parameter('num_sweeps', 8)
+        self.declare_parameter('num_sweeps', 4)
         self.declare_parameter('points_per_sweep', 50)
         self.declare_parameter('waypoint_threshold', 0.3)  # Distance threshold to consider waypoint reached
         self.declare_parameter('transition_step_size', 0.1)  # Maximum step size during transition

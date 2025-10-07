@@ -1,5 +1,10 @@
 # bridge_config.yaml
 
+- gz_topic_name: "/world/default/clock"
+  ros_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+
 # Drone 1 bridges
 - gz_topic_name: "/world/default/model/x500_depth_mono_0/link/camera_link/sensor/IMX214/image"
   ros_topic_name: "/drone1/rgb_camera"

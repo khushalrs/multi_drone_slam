@@ -20,20 +20,25 @@ def generate_launch_description():
                 ),
                 launch_arguments={
                     'namespace': drone1_ns,
+                    'rviz': 'True',
+                    'rtabmapviz': 'False',
                     'use_sim_time': 'True',
+                    'publish_tf': 'False',
                     'frame_id': f'{drone1_ns}/base_link',
                     'odom_frame_id': f'{drone1_ns}/odom',
                     'map_frame_id': f'{drone1_ns}/map',
                     'subscribe_depth': 'True',
                     'subscribe_scan': 'False',
                     'approx_sync': 'True',
-                    'approx_sync_max_interval': '0.1', # Increase tolerance for sim time sync
-                    'database_path': f'~/.ros/rtabmap_{drone1_ns}.db',
+                    'approx_sync_max_interval': '0.2', # Increase tolerance for sim time sync
+                    'database_path': f'~/drone/rtabmap_simulations/rtabmap_{drone1_ns}.db',
                     # Remap topics directly
                     'rgb_topic': f'/{drone1_ns}/rgb_camera',
                     'depth_topic': f'/{drone1_ns}/depth_camera',
                     'camera_info_topic': f'/{drone1_ns}/camera_info',
-                    'odom_topic': f'/{drone1_ns}/local_position/odom',
+                    'odom_topic': f'/{drone1_ns}/odometry/in',
+                    # 'wait_for_transform': '0.5',
+                    # 'odom_sensor_sync': 'True'
                 }.items()
             )
         ]
@@ -49,20 +54,25 @@ def generate_launch_description():
                 ),
                 launch_arguments={
                     'namespace': drone2_ns,
+                    'rviz': 'True',
+                    'rtabmapviz': 'False',
                     'use_sim_time': 'True',
+                    'publish_tf': 'False',
                     'frame_id': f'{drone2_ns}/base_link',
                     'odom_frame_id': f'{drone2_ns}/odom',
                     'map_frame_id': f'{drone2_ns}/map',
                     'subscribe_depth': 'True',
                     'subscribe_scan': 'False',
                     'approx_sync': 'True',
-                    'approx_sync_max_interval': '0.1', # Increase tolerance for sim time sync
+                    'approx_sync_max_interval': '0.2', # Increase tolerance for sim time sync
                     'database_path': f'~/drone/rtabmap_simulations/rtabmap_{drone2_ns}.db',
                     # Remap topics directly
                     'rgb_topic': f'/{drone2_ns}/rgb_camera',
                     'depth_topic': f'/{drone2_ns}/depth_camera',
                     'camera_info_topic': f'/{drone2_ns}/camera_info',
-                    'odom_topic': f'/{drone2_ns}/local_position/odom',
+                    'odom_topic': f'/{drone2_ns}/odometry/in',
+                    # 'wait_for_transform': '0.5',
+                    # 'odom_sensor_sync': 'True'
                 }.items()
             )
         ]

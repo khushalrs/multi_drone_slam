@@ -199,8 +199,8 @@ if __name__ == '__main__':
     center = (50.0, 0.0)          # Center of the semicircular path (cylinder center)
     flight_radius = 23.0          # Desired distance from the center
     total_height = 50.0          # Total vertical distance to cover
-    num_sweeps = 6               # Number of zigzag passes (semicircular sweeps)
-    points_per_sweep = 100        # Resolution of each sweep
+    num_sweeps = 4               # Number of zigzag passes (semicircular sweeps)
+    points_per_sweep = 20        # Resolution of each sweep
     
     # Generate the zigzag trajectory.
     trajectory = get_trajectory_with_pose(

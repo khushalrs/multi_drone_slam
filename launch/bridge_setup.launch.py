@@ -1,7 +1,8 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch_ros.actions import Node 
+from launch.actions import TimerAction
+from launch_ros.actions import Node
 
 def generate_launch_description():
     """
@@ -21,7 +22,7 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         name='gz_ros_bridge',
-        parameters=[{'config_file': bridge_config_path}],
+        parameters=[{'config_file': bridge_config_path, 'use_sim_time': True}],
         output='screen'
     )
 
@@ -63,6 +64,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='map_to_drone1_map_publisher',
+        parameters= [{'use_sim_time': True}],
         arguments=['0', '0', '0', '0', '0', '0', 'map', 'drone1/map']
     )
 
@@ -71,6 +73,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='map_to_drone2_map_publisher',
+        parameters= [{'use_sim_time': True}],
         arguments=['-3', '0', '0', '0', '0', '0', 'map', 'drone2/map']
     )
 
@@ -82,6 +85,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='drone1_base_to_camera_broadcaster',
         namespace=drone1_ns,
+        parameters=[{'use_sim_time': True}],
         arguments=[
             '0.12', '0.03', '0.242', '0', '0', '0',
             f'{drone1_ns}/base_link',
@@ -93,6 +97,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='drone1_camera_to_imx214',
+        parameters=[{'use_sim_time': True}],
         arguments=['0', '0', '0', '0', '0', '0',
                    f'{drone1_ns}/camera_link',
                    'x500_depth_mono_0/camera_link/IMX214']
@@ -102,6 +107,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='drone1_camera_to_stereo',
+        parameters=[{'use_sim_time': True}],
         arguments=['0', '0', '0', '0', '0', '0',
                    f'{drone1_ns}/camera_link',
                    'x500_depth_mono_0/camera_link/StereoOV7251']
@@ -129,6 +135,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='drone2_base_to_camera_broadcaster',
         namespace=drone2_ns,
+        parameters=[{'use_sim_time': True}],
         arguments=[
             '0.12', '0.03', '0.242', '0', '0', '0',
             f'{drone2_ns}/base_link',
@@ -140,6 +147,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='drone2_camera_to_imx214',
+        parameters=[{'use_sim_time': True}],
         arguments=['0', '0', '0', '0', '0', '0',
                    f'{drone2_ns}/camera_link',
                    'x500_depth_mono_1/camera_link/IMX214']
@@ -149,7 +157,9 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='drone2_camera_to_stereo',
-        arguments=['0', '0', '0', '0', '0', '0',
+        parameters=[{'use_sim_time': True}],
+        arguments=[
+            '0', '0', '0', '0', '0', '0',
                    f'{drone2_ns}/camera_link',
                    'x500_depth_mono_1/camera_link/StereoOV7251']
     )
@@ -170,7 +180,16 @@ def generate_launch_description():
 
     return LaunchDescription([
         gz_ros_bridge,
-        static_map_to_drone1_map, static_map_to_drone2_map,
-        mavros1, static_tf_publisher1, d1_cam_to_rgb, d1_cam_to_stereo, odom_tf_publisher1,
-        mavros2, static_tf_publisher2, d2_cam_to_rgb, d2_cam_to_stereo, odom_tf_publisher2
+        TimerAction(period=8.0, actions=[static_map_to_drone1_map]),
+        TimerAction(period=8.0, actions=[static_map_to_drone2_map]),
+        TimerAction(period=8.0, actions=[mavros1]),
+        TimerAction(period=8.0, actions=[static_tf_publisher1]),
+        TimerAction(period=8.0, actions=[d1_cam_to_rgb]),
+        TimerAction(period=8.0, actions=[d1_cam_to_stereo]),
+        TimerAction(period=8.0, actions=[odom_tf_publisher1]),
+        TimerAction(period=8.0, actions=[mavros2]),
+        TimerAction(period=8.0, actions=[static_tf_publisher2]),
+        TimerAction(period=8.0, actions=[d2_cam_to_rgb]),
+        TimerAction(period=8.0, actions=[d2_cam_to_stereo]),
+        TimerAction(period=8.0, actions=[odom_tf_publisher2])
     ])
