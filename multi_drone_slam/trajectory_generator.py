@@ -56,6 +56,73 @@ def compute_rpy_to_center(position, center):
 
     return roll, pitch, yaw
 
+
+def resample_path_equal_arc_length(path_xyzrpy, spacing_m):
+    """
+    Resample a pose path to approximately constant 3D spacing.
+
+    Args:
+        path_xyzrpy (np.ndarray): Original path as Nx6 array.
+        spacing_m (float): Desired spacing in meters between successive samples.
+
+    Returns:
+        np.ndarray: Resampled Mx6 pose path.
+    """
+    if path_xyzrpy is None:
+        return None
+
+    if len(path_xyzrpy) == 0:
+        return path_xyzrpy
+
+    if spacing_m is None or spacing_m <= 0.0:
+        return path_xyzrpy.copy()
+
+    xyz = path_xyzrpy[:, :3]
+    diffs = np.diff(xyz, axis=0)
+    segment_lengths = np.linalg.norm(diffs, axis=1)
+    cumulative_s = np.concatenate(([0.0], np.cumsum(segment_lengths)))
+    total_length = cumulative_s[-1]
+
+    if total_length <= 1e-6:
+        # Path has no length; collapse to single point copy.
+        return path_xyzrpy[:1].copy()
+
+    # Remove duplicated samples that create zero-length segments.
+    epsilon = 1e-6
+    keep_mask = np.ones(len(cumulative_s), dtype=bool)
+    keep_mask[1:] = np.diff(cumulative_s) > epsilon
+    keep_mask[-1] = True  # Always keep the final point
+    unique_s = cumulative_s[keep_mask]
+    unique_path = path_xyzrpy[keep_mask]
+    unique_xyz = unique_path[:, :3]
+    unique_roll = unique_path[:, 3]
+    unique_pitch = unique_path[:, 4]
+    unique_yaw_unwrapped = np.unwrap(unique_path[:, 5])
+
+    # Build target arc-length samples.
+    targets = list(np.arange(0.0, total_length, spacing_m))
+    if len(targets) == 0 or abs(targets[-1] - total_length) > epsilon:
+        targets.append(total_length)
+
+    targets = np.asarray(targets)
+
+    # Linear interpolation for position and orientation (yaw unwrapped).
+    new_xyz = np.column_stack(
+        [
+            np.interp(targets, unique_s, unique_xyz[:, dim])
+            for dim in range(3)
+        ]
+    )
+    new_roll = np.interp(targets, unique_s, unique_roll)
+    new_pitch = np.interp(targets, unique_s, unique_pitch)
+    new_yaw_unwrapped = np.interp(targets, unique_s, unique_yaw_unwrapped)
+
+    # Wrap yaw back to [-pi, pi] for output.
+    new_yaw = (new_yaw_unwrapped + np.pi) % (2.0 * np.pi) - np.pi
+
+    resampled = np.column_stack((new_xyz, new_roll, new_pitch, new_yaw))
+    return resampled
+
 def generate_vertical_zigzag_trajectory(center, 
         flight_radius, total_height, num_sweeps, 
         points_per_sweep, start_angle=0, min_height=5.0, 
@@ -151,10 +218,10 @@ def plot_trajectory(trajectory):
 def get_trajectory_with_pose(center, flight_radius, 
         total_height, num_sweeps, points_per_sweep, 
         start_angle=0, min_height=5.0, flip_x=False, 
-        flip_y=False):
+        flip_y=False, resample_spacing=0.2):
     """
     Generate a trajectory with position and orientation information.
-    
+
     Args:
         center (tuple): (cx, cy) center of the cylinder.
         flight_radius (float): Distance from the center at which the drone flies.
@@ -163,7 +230,7 @@ def get_trajectory_with_pose(center, flight_radius,
         points_per_sweep (int): Number of waypoints per sweep.
         start_angle (float): Starting angle (in radians) for the first sweep.
         min_height (float): Initial minimum height to reach before starting zigzag.
-    
+
     Returns:
         np.ndarray: An (N, 6) array containing [x, y, z, roll, pitch, yaw] for each point.
     """
@@ -190,7 +257,12 @@ def get_trajectory_with_pose(center, flight_radius,
     for i in range(num_points):
         roll, pitch, yaw = compute_rpy_to_center(trajectory[i], center)
         trajectory_with_pose[i, 3:] = [roll, pitch, yaw]
-    
+
+    if resample_spacing is not None:
+        trajectory_with_pose = resample_path_equal_arc_length(
+            trajectory_with_pose, resample_spacing
+        )
+
     return trajectory_with_pose
 
 # Example usage:
