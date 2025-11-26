@@ -14,12 +14,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch',
             glob('launch/*.launch.py')),
-        ('share/' + package_name + '/config', [
-            'config/terrain_mapping_params.yaml',
-            'config/drone_viz.rviz',
-            'config/bridge_config.yaml',
-            'config/mavros_config.yaml'
-        ]),
+        ('share/' + package_name + '/config', 
+            glob('config/*')),
         ('share/' + package_name + '/models/terrain', [
             'models/terrain/model.config',
             'models/terrain/model.sdf'
@@ -66,6 +62,7 @@ setup(
             'dron1 = multi_drone_slam.dron1:main',
             'dron2 = multi_drone_slam.dron2:main',
             'dron3 = multi_drone_slam.dron3:main',
+            'imu_reframe = multi_drone_slam.imu_reframe:main',
             'gz_link_pose_to_tf = multi_drone_slam.gz_link_pose_to_tf:main',
             'circle_detection = multi_drone_slam.circle_detection:main'
         ],

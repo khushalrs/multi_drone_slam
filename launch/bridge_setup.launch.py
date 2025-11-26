@@ -14,7 +14,7 @@ def generate_launch_description():
     - TF publishers for odom and static transforms.
     """
     pkg_share = get_package_share_directory('multi_drone_slam')
-    bridge_config_path = os.path.join(pkg_share, 'config', 'bridge_config.yaml')
+    bridge_config_path = os.path.join(pkg_share, 'config', 'single_bridge_config.yaml')
     mavros_config_path = os.path.join(pkg_share, 'config', 'mavros_config.yaml')
 
     # --- SHARED NODES ACROSS ALL DRONES ---
@@ -181,15 +181,15 @@ def generate_launch_description():
     return LaunchDescription([
         gz_ros_bridge,
         TimerAction(period=8.0, actions=[static_map_to_drone1_map]),
-        TimerAction(period=8.0, actions=[static_map_to_drone2_map]),
+        # TimerAction(period=8.0, actions=[static_map_to_drone2_map]),
         TimerAction(period=8.0, actions=[mavros1]),
         TimerAction(period=8.0, actions=[static_tf_publisher1]),
         TimerAction(period=8.0, actions=[d1_cam_to_rgb]),
         TimerAction(period=8.0, actions=[d1_cam_to_stereo]),
         TimerAction(period=8.0, actions=[odom_tf_publisher1]),
-        TimerAction(period=8.0, actions=[mavros2]),
-        TimerAction(period=8.0, actions=[static_tf_publisher2]),
-        TimerAction(period=8.0, actions=[d2_cam_to_rgb]),
-        TimerAction(period=8.0, actions=[d2_cam_to_stereo]),
-        TimerAction(period=8.0, actions=[odom_tf_publisher2])
+        # TimerAction(period=8.0, actions=[mavros2]),
+        # TimerAction(period=8.0, actions=[static_tf_publisher2]),
+        # TimerAction(period=8.0, actions=[d2_cam_to_rgb]),
+        # TimerAction(period=8.0, actions=[d2_cam_to_stereo]),
+        # TimerAction(period=8.0, actions=[odom_tf_publisher2])
     ])

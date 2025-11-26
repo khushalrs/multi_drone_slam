@@ -24,6 +24,12 @@
   gz_type_name: "gz.msgs.Image"
   frame_id: "drone1/camera_link"
 
+# - gz_topic_name: "/world/default/model/x500_depth_mono_0/link/base_link/sensor/imu_sensor/imu"
+#   ros_topic_name: "/drone1/imu/data_fixed"
+#   ros_type_name: "sensor_msgs/msg/Imu"
+#   gz_type_name: "gz.msgs.IMU"
+#   frame_id: "drone1/base_link"
+
 # Drone 2 bridges
 - gz_topic_name: "/world/default/model/x500_depth_mono_1/link/camera_link/sensor/IMX214/image"
   ros_topic_name: "/drone2/rgb_camera"
@@ -42,3 +48,9 @@
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   frame_id: "drone2/camera_link"
+
+# - gz_topic_name: "/world/default/model/x500_depth_mono_1/link/base_link/sensor/imu_sensor/imu"
+#   ros_topic_name: "/drone2/imu/data_fixed"
+#   ros_type_name: "sensor_msgs/msg/Imu"
+#   gz_type_name: "gz.msgs.IMU"
+#   frame_id: "drone2/base_link"
