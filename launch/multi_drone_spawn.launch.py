@@ -44,7 +44,7 @@ def generate_launch_description():
             additional_env={
                 'MAV_SYS_ID': '1',
                 'PX4_GZ_MODEL_POSE': '0,0,0.07,0,0,0',
-                'PX4_SIM_MODEL': 'gz_x500_depth_mono',
+                'PX4_SIM_MODEL': 'gz_my_lidar_camera_drone',
             },
             cwd=px4_root,
             output='screen',

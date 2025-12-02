@@ -20,6 +20,8 @@ setup(
             'models/terrain/model.config',
             'models/terrain/model.sdf'
         ]),
+        ('share/' + package_name + '/models/my_lidar_camera_drone',
+            glob('models/my_lidar_camera_drone/*.*')),
         ('share/' + package_name + '/models/terrain/skyscrapper', [
             'models/terrain/skyscrapper/model.config',
             'models/terrain/skyscrapper/model.sdf'

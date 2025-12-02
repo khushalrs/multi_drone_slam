@@ -1,0 +1,58 @@
+# Bridge configuration for a single my_lidar_camera_drone in the baylands world.
+
+- gz_topic_name: "/world/baylands/clock"
+  ros_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+
+# Core sensors on the base_link
+- gz_topic_name: "/world/baylands/model/my_lidar_camera_drone_0/link/base_link/sensor/imu_sensor/imu"
+  ros_topic_name: "/drone1/imu_fixed/data"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  frame_id: "drone1/base_link"
+  reliability: "best_effort"
+
+- gz_topic_name: "/world/baylands/model/my_lidar_camera_drone_0/link/base_link/sensor/magnetometer_sensor/magnetic_field"
+  ros_topic_name: "/drone1/magnetic_field"
+  ros_type_name: "sensor_msgs/msg/MagneticField"
+  gz_type_name: "gz.msgs.Magnetometer"
+  frame_id: "drone1/base_link"
+
+- gz_topic_name: "/world/baylands/model/my_lidar_camera_drone_0/link/base_link/sensor/air_pressure_sensor/air_pressure"
+  ros_topic_name: "/drone1/air_pressure"
+  ros_type_name: "sensor_msgs/msg/FluidPressure"
+  gz_type_name: "gz.msgs.FluidPressure"
+  frame_id: "drone1/base_link"
+
+- gz_topic_name: "/world/baylands/model/my_lidar_camera_drone_0/link/base_link/sensor/navsat_sensor/navsat"
+  ros_topic_name: "/drone1/navsat"
+  ros_type_name: "sensor_msgs/msg/NavSatFix"
+  gz_type_name: "gz.msgs.NavSat"
+  frame_id: "drone1/base_link"
+
+# Oak-D camera (RGB)
+- gz_topic_name: "/world/baylands/model/my_lidar_camera_drone_0/link/camera_link/sensor/IMX214/image"
+  ros_topic_name: "/drone1/rgb_camera"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  frame_id: "drone1/camera_link"
+
+- gz_topic_name: "/world/baylands/model/my_lidar_camera_drone_0/link/camera_link/sensor/IMX214/camera_info"
+  ros_topic_name: "/drone1/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  frame_id: "drone1/camera_link"
+
+# 3D LiDAR outputs (topics observed in sim)
+- gz_topic_name: "/lidar/points"
+  ros_topic_name: "/drone1/lidar/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  frame_id: "drone1/lidar_sensor_link"
+
+- gz_topic_name: "/lidar/points/points"
+  ros_topic_name: "/drone1/lidar/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
+  frame_id: "drone1/lidar_sensor_link"

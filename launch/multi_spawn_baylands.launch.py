@@ -59,8 +59,7 @@ def generate_launch_description():
             cmd=[px4_bin, '-i', '0'],
             additional_env={
                 'MAV_SYS_ID': '1',
-                'PX4_GZ_MODEL_POSE': '0,0,0.5,0,0,0',
-                'PX4_SIM_MODEL': 'gz_x500_depth_mono',
+                'PX4_SYS_AUTOSTART': '4023',
                 'PX4_GZ_WORLD': 'baylands',
             },
             cwd=px4_root,
